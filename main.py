@@ -22,10 +22,10 @@ logging.basicConfig(
 GAMES = {}
 
 # ==============================================================================
-# 🎯 CORRECTED STICKER FILE ID MAPPING (အမှတ်နှင့် စတစ်ကာ ID တိကျစွာ Mapping လုပ်ထားသည်)
+# STICKER FILE ID MAPPING
 # ==============================================================================
-DRAW_STICKER_ID = "CAACAgIAAxkBAAER95pqu8twsjF5O8hhtNFV-w8UThc37gAC7CgAAjPGKUjt4hLF81JA6D0E" # ? (Draw)
-PASS_STICKER_ID = "CAACAgIAAxkBAAER95tqu8twG9aoGiJa5OLWasXZQuC_9gACozEAAp2mKEjmlX9mPoG7ZD0E" # 👤➡️️👤 (Pass)
+DRAW_STICKER_ID = "CAACAgIAAxkBAAER95pqu8twsjF5O8hhtNFV-w8UThc37gAC7CgAAjPGKUjt4hLF81JA6D0E" # ❓ (Draw)
+PASS_STICKER_ID = "CAACAgIAAxkBAAER95tqu8twG9aoGiJa5OLWasXZQuC_9gACozEAAp2mKEjmlX9mPoG7ZD0E" # 👤➡👤 (Pass)
 
 STICKER_MAP = {
     (0, 0): "CAACAgIAAxkBAAER935qu8twVcl764Y0UWYM6rCBcwhLgQACNy0AAgOcKEivdNWrUipUpD0E",
@@ -59,7 +59,6 @@ STICKER_MAP = {
 }
 
 def get_sticker_id(tile):
-    # tile ကို အငယ် မှ အကြီးသို့ စီစဉ်၍ Key အဖြစ် ရှာဖွေခြင်း
     key = tuple(sorted(tile))
     return STICKER_MAP.get(key)
 
@@ -109,9 +108,11 @@ async def new_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     user = update.effective_user
 
+    display_name = f"@{user.username}" if user.username else user.first_name
+
     GAMES[chat_id] = DominoGame(chat_id, user.id)
     GAMES[chat_id].players.append(user.id)
-    GAMES[chat_id].player_names[user.id] = user.first_name
+    GAMES[chat_id].player_names[user.id] = display_name
 
     await update.message.reply_text(
         f"Created a new game! Join the game with /join and start the game with /start"
@@ -136,9 +137,10 @@ async def join_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("You already joined!")
         return
 
+    display_name = f"@{user.username}" if user.username else user.first_name
     game.players.append(user.id)
-    game.player_names[user.id] = user.first_name
-    await update.message.reply_text(f"{user.first_name} joined the game!")
+    game.player_names[user.id] = display_name
+    await update.message.reply_text(f"{display_name} joined the game!")
 
 async def start_game_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
@@ -192,8 +194,8 @@ async def leave_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     game.players.remove(user.id)
-    del game.player_names[user.id]
-    await update.message.reply_text(f"{user.first_name} left the game.")
+    name = game.player_names.pop(user.id, user.first_name)
+    await update.message.reply_text(f"{name} left the game.")
 
 async def close_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     game = GAMES.get(update.effective_chat.id)
@@ -269,7 +271,9 @@ async def inline_query_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
     hand = active_game.hands[user_id]
 
-    if not active_game.drawn_this_turn:
+    # ၁။ Deck ထဲမှာ ဆွဲစရာ ကဒ်ကျန်သေးလျှင် Draw ခလုတ်ပြမည်
+    # ၂။ Deck ထဲမှာ ကဒ်ကုန်သွားလျှင် သို့မဟုတ် ကဒ်ဆွဲပြီးပါက Pass ခလုတ် ပြပေးမည်
+    if len(active_game.deck) > 0 and not active_game.drawn_this_turn:
         results.append(
             InlineQueryResultCachedSticker(
                 id="draw_action",
@@ -315,21 +319,23 @@ async def handle_play_tile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception:
         return
 
+    # မကိုက်ညီတဲ့ အတုံးကို ချမရအောင် စစ်ဆေးပေးခြင်း
     if not game.can_play_tile(tile):
-        await update.message.reply_text("❌ You cannot play this tile!")
+        await update.message.reply_text("❌ ဒီအတုံးကို ချလို့မရပါဘူး! ဘုတ်ပေါ်က အစွန်းနဲ့ မကိုက်ညီပါဘူး။")
         return
 
     left_end, right_end = game.get_ends()
     a, b = tile
 
+    # အတုံးကို ဘုတ်ပေါ်တွင် မှန်ကန်စွာ ဆက်ပေးခြင်း
     if a == right_end:
         game.board.append((a, b))
     elif b == right_end:
         game.board.append((b, a))
-    elif a == left_end:
-        game.board.insert(0, (b, a))
     elif b == left_end:
         game.board.insert(0, (a, b))
+    elif a == left_end:
+        game.board.insert(0, (b, a))
 
     played_sticker = get_sticker_id(tile)
     game.hands[user_id].pop(tile_idx)
@@ -338,7 +344,7 @@ async def handle_play_tile(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_sticker(played_sticker)
 
     if len(game.hands[user_id]) == 0:
-        await update.message.reply_text(f"🎉 {game.player_names[user_id]} won the game! 🏆")
+        await update.message.reply_text(f"🎉 {game.player_names[user_id]} အနိုင်ရသွားပါပြီ! 🏆")
         del GAMES[chat_id]
         return
 
@@ -354,7 +360,7 @@ async def handle_draw(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     if len(game.deck) == 0:
-        await update.message.reply_text("No tiles left in deck. Use Pass!")
+        await update.message.reply_text("ဆွဲစရာ ကဒ် မရှိတော့ပါဘူး။ Pass ကို နှိပ်ပါ။")
         return
 
     drawn_tile = game.deck.pop()
@@ -362,7 +368,7 @@ async def handle_draw(update: Update, context: ContextTypes.DEFAULT_TYPE):
     game.drawn_this_turn = True
 
     await update.message.reply_text(
-        f"{game.player_names[user_id]} drew a tile.\nClick 'Make your choice!' again to play or pass.",
+        f"{game.player_names[user_id]} ကဒ်တစ်ကဒ် ဆွဲလိုက်ပါတယ်။\n'Make your choice!' ကို ပြန်နှိပ်ပြီး ချပါ သို့မဟုတ် Pass လုပ်ပါ။",
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Make your choice!", switch_inline_query_current_chat="")]])
     )
 
@@ -374,7 +380,9 @@ async def handle_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not game or game.get_current_player_id() != user_id:
         return
 
+    current_name = game.player_names[user_id]
     game.next_turn()
+    await update.message.reply_text(f"⏩ {current_name} အလှည့်ကျော် (Pass) လုပ်လိုက်ပါတယ်။")
     await send_next_turn_message(context, game)
 
 async def send_next_turn_message(context, game):
@@ -395,7 +403,7 @@ async def send_next_turn_message(context, game):
 
 if __name__ == "__main__":
     import os
-    BOT_TOKEN = os.environ.get("BOT_TOKEN", "8988526962:AAGdIJbT8Bg4KpI270mlt8JlS5mLvPS6eMM")
+    BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
