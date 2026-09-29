@@ -22,10 +22,10 @@ logging.basicConfig(
 GAMES = {}
 
 # ==============================================================================
-# 🎯 CORRECTED STICKER FILE ID MAPPING (အမှတ်နှင့် စတစ်ကာ ID မှန်ကန်စွာ ပြင်ဆင်ပြီး)
+# 🎯 CORRECTED STICKER FILE ID MAPPING (အမှတ်နှင့် စတစ်ကာ ID တိကျစွာ Mapping လုပ်ထားသည်)
 # ==============================================================================
 DRAW_STICKER_ID = "CAACAgIAAxkBAAER95pqu8twsjF5O8hhtNFV-w8UThc37gAC7CgAAjPGKUjt4hLF81JA6D0E" # ? (Draw)
-PASS_STICKER_ID = "CAACAgIAAxkBAAER95tqu8twG9aoGiJa5OLWasXZQuC_9gACozEAAp2mKEjmlX9mPoG7ZD0E" # 👤➡️👤 (Pass)
+PASS_STICKER_ID = "CAACAgIAAxkBAAER95tqu8twG9aoGiJa5OLWasXZQuC_9gACozEAAp2mKEjmlX9mPoG7ZD0E" # 👤➡️️👤 (Pass)
 
 STICKER_MAP = {
     (0, 0): "CAACAgIAAxkBAAER935qu8twVcl764Y0UWYM6rCBcwhLgQACNy0AAgOcKEivdNWrUipUpD0E",
@@ -50,7 +50,7 @@ STICKER_MAP = {
     (3, 4): "CAACAgIAAxkBAAER95Fqu8twMY7mrKGPqSB5EBPrBAtKygACGCsAAoPQKEiE4DMWKSFr1D0E",
     (3, 5): "CAACAgIAAxkBAAER95Jqu8twPTgiHFTOhYU9WBBzWZyGTAACIjAAAiwCKEiCzoCKNkWSKT0E",
     (3, 6): "CAACAgIAAxkBAAER95Nqu8twwBh96xi8I7w_CNyNYIg3ZgACPC0AAnjfKEjwBdsYe03Mrj0E",
-    (4, 4): "CAACAgIAAxkBAAER95Rqu8twdiY3ygke7ktktECuATS9QwACBiUAAtelKEjS0WFULFDPRj0E",
+    (4, 4): "CAACAgIAAxkBAAER95Rqu8twdiY3ygke7kTktECuATS9QwACBiUAAtelKEjS0WFULFDPRj0E",
     (4, 5): "CAACAgIAAxkBAAER95Vqu8twgC3BZuIU_6GNgn2vKCfyZwACySwAAr1xKEjXp_YUUrIP-D0E",
     (4, 6): "CAACAgIAAxkBAAER95Zqu8twO26vn_pBWuUerKKQ-i0jtQACty0AAuXeKUiMg4qb-JOhtT0E",
     (5, 5): "CAACAgIAAxkBAAER95dqu8twxxPl2spBayM2ErNf8kpHKwACqyoAAp__KEhtVSbeNa-kUz0E",
@@ -59,6 +59,7 @@ STICKER_MAP = {
 }
 
 def get_sticker_id(tile):
+    # tile ကို အငယ် မှ အကြီးသို့ စီစဉ်၍ Key အဖြစ် ရှာဖွေခြင်း
     key = tuple(sorted(tile))
     return STICKER_MAP.get(key)
 
@@ -394,7 +395,7 @@ async def send_next_turn_message(context, game):
 
 if __name__ == "__main__":
     import os
-    BOT_TOKEN = os.environ.get("BOT_TOKEN", "8988526962:AAGdIJbT8Bg4KpI270mlt8JlS5mLvPS6eMM")
+    BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
