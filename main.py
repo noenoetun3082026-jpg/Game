@@ -331,7 +331,7 @@ async def send_next_turn_message(update, context, game):
 
 # --- Main App ---
 if __name__ == "__main__":
-    BOT_TOKEN = "YOUR_BOT_TOKEN_HERE"  # @BotFather မှ Token ထည့်ပါ
+    BOT_TOKEN = "8988526962:AAGdIJbT8Bg4KpI270mlt8JlS5mLvPS6eMM"  # @BotFather မှ Token ထည့်ပါ
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
