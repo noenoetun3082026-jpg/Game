@@ -22,7 +22,7 @@ logging.basicConfig(
 GAMES = {}
 
 # ==============================================================================
-# 🎯 STICKER FILE ID MAPPING (ပေးထားသော ID များဖြင့် အပြည့်အဝ ဖြည့်သွင်းပြီး)
+# 🎯 CORRECTED STICKER FILE ID MAPPING (အမှတ်နှင့် စတစ်ကာ ID မှန်ကန်စွာ ပြင်ဆင်ပြီး)
 # ==============================================================================
 DRAW_STICKER_ID = "CAACAgIAAxkBAAER95pqu8twsjF5O8hhtNFV-w8UThc37gAC7CgAAjPGKUjt4hLF81JA6D0E" # ? (Draw)
 PASS_STICKER_ID = "CAACAgIAAxkBAAER95tqu8twG9aoGiJa5OLWasXZQuC_9gACozEAAp2mKEjmlX9mPoG7ZD0E" # 👤➡️👤 (Pass)
@@ -50,7 +50,7 @@ STICKER_MAP = {
     (3, 4): "CAACAgIAAxkBAAER95Fqu8twMY7mrKGPqSB5EBPrBAtKygACGCsAAoPQKEiE4DMWKSFr1D0E",
     (3, 5): "CAACAgIAAxkBAAER95Jqu8twPTgiHFTOhYU9WBBzWZyGTAACIjAAAiwCKEiCzoCKNkWSKT0E",
     (3, 6): "CAACAgIAAxkBAAER95Nqu8twwBh96xi8I7w_CNyNYIg3ZgACPC0AAnjfKEjwBdsYe03Mrj0E",
-    (4, 4): "CAACAgIAAxkBAAER95Rqu8twdiY3ygke7kTktECuATS9QwACBiUAAtelKEjS0WFULFDPRj0E",
+    (4, 4): "CAACAgIAAxkBAAER95Rqu8twdiY3ygke7ktktECuATS9QwACBiUAAtelKEjS0WFULFDPRj0E",
     (4, 5): "CAACAgIAAxkBAAER95Vqu8twgC3BZuIU_6GNgn2vKCfyZwACySwAAr1xKEjXp_YUUrIP-D0E",
     (4, 6): "CAACAgIAAxkBAAER95Zqu8twO26vn_pBWuUerKKQ-i0jtQACty0AAuXeKUiMg4qb-JOhtT0E",
     (5, 5): "CAACAgIAAxkBAAER95dqu8twxxPl2spBayM2ErNf8kpHKwACqyoAAp__KEhtVSbeNa-kUz0E",
@@ -268,7 +268,6 @@ async def inline_query_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
     hand = active_game.hands[user_id]
 
-    # Draw (?) သို့မဟုတ် Pass (👤➡️️👤) Sticker ခလုတ်ပြသခြင်း
     if not active_game.drawn_this_turn:
         results.append(
             InlineQueryResultCachedSticker(
@@ -286,7 +285,6 @@ async def inline_query_handler(update: Update, context: ContextTypes.DEFAULT_TYP
             )
         )
 
-    # Hand Tiles Display via Sticker
     for idx, tile in enumerate(hand):
         sticker_id = get_sticker_id(tile)
         if sticker_id:
