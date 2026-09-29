@@ -395,7 +395,7 @@ async def send_next_turn_message(context, game):
 
 if __name__ == "__main__":
     import os
-    BOT_TOKEN = os.environ.get("BOT_TOKEN", "YOUR_BOT_TOKEN_HERE")
+    BOT_TOKEN = os.environ.get("BOT_TOKEN", "8988526962:AAGdIJbT8Bg4KpI270mlt8JlS5mLvPS6eMM")
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
