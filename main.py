@@ -4,6 +4,7 @@ from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    InlineQueryResultCachedSticker,
     InlineQueryResultArticle,
     InputTextMessageContent,
 )
@@ -60,12 +61,6 @@ STICKER_MAP = {
 def get_sticker_id(tile):
     key = tuple(sorted(tile))
     return STICKER_MAP.get(key)
-
-def get_tile_emoji(tile):
-    emoji_id = get_sticker_id(tile)
-    if emoji_id:
-        return f'<tg-emoji emoji-id="{emoji_id}">🁔</tg-emoji>'
-    return f"[{tile[0]}|{tile[1]}]"
 
 def generate_domino_deck():
     deck = []
@@ -171,16 +166,21 @@ async def start_game_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_id = game.get_current_player_id()
     name = game.player_names[current_id]
 
-    first_emoji = get_tile_emoji(first_tile)
-    
     text = (
         f"First player: {name}\n"
-        f"Initial tile: {first_emoji}\n\n"
+        f"Initial tile: [{first_tile[0]}|{first_tile[1]}]\n\n"
         f"Use /close to stop people from joining the game."
     )
     keyboard = [[InlineKeyboardButton("Make your choice!", switch_inline_query_current_chat="")]]
-        
-    await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="HTML")
+    
+    first_sticker = get_sticker_id(first_tile)
+    if first_sticker:
+        try:
+            await update.message.reply_sticker(first_sticker)
+        except Exception:
+            pass
+
+    await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
 async def leave_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
@@ -247,7 +247,7 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def stats_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Statistics feature coming soon!")
 
-# --- Inline Query Handler (Custom Emoji Menu) ---
+# --- Inline Query Handler ---
 
 async def inline_query_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.inline_query
@@ -273,45 +273,34 @@ async def inline_query_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
     hand = active_game.hands[user_id]
 
-    # DRAW သို့မဟုတ် PASS ခလုတ် ပြသခြင်း
+    # DRAW သို့မဟုတ် PASS ခလုတ်
     if len(active_game.deck) > 0 and not active_game.drawn_this_turn:
         results.append(
-            InlineQueryResultArticle(
+            InlineQueryResultCachedSticker(
                 id="draw_action",
-                title="📥 Draw Tile",
-                description="Click to draw a tile",
-                input_message_content=InputTextMessageContent(
-                    f'<tg-emoji emoji-id="{DRAW_STICKER_ID}">❓</tg-emoji> /draw_action',
-                    parse_mode="HTML"
-                )
+                sticker_file_id=DRAW_STICKER_ID,
+                input_message_content=InputTextMessageContent("/draw_action")
             )
         )
     else:
         results.append(
-            InlineQueryResultArticle(
+            InlineQueryResultCachedSticker(
                 id="pass_action",
-                title="⏩ Pass Turn",
-                description="Click to pass your turn",
-                input_message_content=InputTextMessageContent(
-                    f'<tg-emoji emoji-id="{PASS_STICKER_ID}">⏭</tg-emoji> /pass_action',
-                    parse_mode="HTML"
-                )
+                sticker_file_id=PASS_STICKER_ID,
+                input_message_content=InputTextMessageContent("/pass_action")
             )
         )
 
     for idx, tile in enumerate(hand):
-        tile_emoji = get_tile_emoji(tile)
-        results.append(
-            InlineQueryResultArticle(
-                id=f"tile_{idx}",
-                title=f"Tile [{tile[0]}|{tile[1]}]",
-                description="Click to play this tile",
-                input_message_content=InputTextMessageContent(
-                    f"{tile_emoji} /play_tile {idx}",
-                    parse_mode="HTML"
+        sticker_id = get_sticker_id(tile)
+        if sticker_id:
+            results.append(
+                InlineQueryResultCachedSticker(
+                    id=f"tile_{idx}",
+                    sticker_file_id=sticker_id,
+                    input_message_content=InputTextMessageContent(f"/play_tile {idx}")
                 )
             )
-        )
 
     await query.answer(results, cache_time=1)
 
@@ -347,7 +336,14 @@ async def handle_play_tile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif a == left_end:
         game.board.insert(0, (b, a))
 
+    played_sticker = get_sticker_id(tile)
     game.hands[user_id].pop(tile_idx)
+
+    if played_sticker:
+        try:
+            await update.message.reply_sticker(played_sticker)
+        except Exception:
+            pass
 
     if len(game.hands[user_id]) == 0:
         await update.message.reply_text(f"🎉 {game.player_names[user_id]} အနိုင်ရသွားပါပြီ! 🏆")
@@ -392,7 +388,7 @@ async def handle_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_next_turn_message(context, game)
 
 async def send_next_turn_message(context, game):
-    board_str = " ".join([get_tile_emoji(t) for t in game.board])
+    board_str = " ".join([f"[{t[0]}|{t[1]}]" for t in game.board])
     current_id = game.get_current_player_id()
     name = game.player_names[current_id]
 
@@ -404,8 +400,7 @@ async def send_next_turn_message(context, game):
     await context.bot.send_message(
         chat_id=game.chat_id,
         text=text,
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode="HTML"
+        reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
 if __name__ == "__main__":
