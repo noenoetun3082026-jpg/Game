@@ -4,7 +4,6 @@ from telegram import (
     Update,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
-    InlineQueryResultCachedSticker,
     InlineQueryResultArticle,
     InputTextMessageContent,
 )
@@ -22,45 +21,51 @@ logging.basicConfig(
 GAMES = {}
 
 # ==============================================================================
-# STICKER FILE ID MAPPING
+# STICKER / CUSTOM EMOJI ID MAPPING
 # ==============================================================================
-DRAW_STICKER_ID = "CAACAgIAAxkBAAER95pqu8twsjF5O8hhtNFV-w8UThc37gAC7CgAAjPGKUjt4hLF81JA6D0E" # ❓ (Draw)
-PASS_STICKER_ID = "CAACAgIAAxkBAAER95tqu8twG9aoGiJa5OLWasXZQuC_9gACozEAAp2mKEjmlX9mPoG7ZD0E" # 👤➡👤 (Pass)
+DRAW_STICKER_ID = "5463122435425448565" # ❓ (Draw)
+PASS_STICKER_ID = "6035380708258615873" # 👤➡👤 (Pass)
 
 STICKER_MAP = {
-    (0, 0): "CAACAgIAAxkBAAER935qu8twVcl764Y0UWYM6rCBcwhLgQACNy0AAgOcKEivdNWrUipUpD0E",
-    (0, 1): "CAACAgIAAxkBAAER939qu8twCWrLrA93EBlvw4z0Smm4-gAChCIAAqeRKEgTAAEWOhiabFQ9BA",
-    (0, 2): "CAACAgIAAxkBAAER94Bqu8twgIDTDb7sgkOI1EY2pRbkjQACxSoAAzkpSBfcTTva3k2yPQQ",
-    (0, 3): "CAACAgIAAxkBAAER94Fqu8twKjsefjuNCfEDMUq7H8IWIAACzCIAAlUzKEgwNgLCZ5NSdj0E",
-    (0, 4): "CAACAgIAAxkBAAER94Jqu8twwTTcfmRZvm6XXspK0nmjmgACWi4AAgsxKUgP6QidgPU_vD0E",
-    (0, 5): "CAACAgIAAxkBAAER94Nqu8twu5IfB1d9jprwNDE82Muf3gACxicAAskcKUh81whuSWBy_T0E",
-    (0, 6): "CAACAgIAAxkBAAER94Rqu8twI-L2y55lnLbrDrNZjRT1gQACMjAAAgFpKEhl1mjg5_SJrz0E",
-    (1, 1): "CAACAgIAAxkBAAER94Vqu8twcip5UBKk3DeeEd7fstHgwwACDC8AAgSYKEg8MYiXVi3CEz0E",
-    (1, 2): "CAACAgIAAxkBAAER94Zqu8twfrphRB3TuCaCLIlHJUvg1AACoioAAtByKEjs38uspde1Oj0E",
-    (1, 3): "CAACAgIAAxkBAAER94dqu8twqSeH7cofeknhRxzBArFsRgAClCkAAtSwKEi3Jin4UkiYBj0E",
-    (1, 4): "CAACAgIAAxkBAAER94hqu8twNuXd46bf-PYqGoZDJpisygAC1ywAAlJgKUjdSeYyascWjT0E",
-    (1, 5): "CAACAgIAAxkBAAER94lqu8tw9dysIW2duZGYyjLpjxKTkwACfi4AAiZlKUjPHT845PZoXz0E",
-    (1, 6): "CAACAgIAAxkBAAER94pqu8tw10ll5ogtYaUyD3A27ZtB-QACgCwAAgq2KEjINjh0yLySGT0E",
-    (2, 2): "CAACAgIAAxkBAAER94tqu8twt5rKtGKpQSL1E2P5BQO0AgACLS8AApHKKUjrJ6XTdPZ5dT0E",
-    (2, 3): "CAACAgIAAxkBAAER94xqu8twtX_fjku0B_bBK1RtzT4WwQACdygAAkNVKEgTNuyp4WueTz0E",
-    (2, 4): "CAACAgIAAxkBAAER941qu8twICjRsmXRwR3jl-6Ok43r2gAC7DAAAnF-KUiIS-7mDqfQbT0E",
-    (2, 5): "CAACAgIAAxkBAAER945qu8tw4oH2MFJ477WPyKAH8D6U8wACeiMAAhBsKEhkx_xhsFaacj0E",
-    (2, 6): "CAACAgIAAxkBAAER949qu8tw74JeNt9QMwfrJP3edPDeNwACvyoAAtWsKUhe7Ja3ko9u7D0E",
-    (3, 3): "CAACAgIAAxkBAAER95Bqu8tw4qP7yG_Ev-jHCviofm1MbwAC9ykAAsPWKEjvFFYcR9YNqj0E",
-    (3, 4): "CAACAgIAAxkBAAER95Fqu8twMY7mrKGPqSB5EBPrBAtKygACGCsAAoPQKEiE4DMWKSFr1D0E",
-    (3, 5): "CAACAgIAAxkBAAER95Jqu8twPTgiHFTOhYU9WBBzWZyGTAACIjAAAiwCKEiCzoCKNkWSKT0E",
-    (3, 6): "CAACAgIAAxkBAAER95Nqu8twwBh96xi8I7w_CNyNYIg3ZgACPC0AAnjfKEjwBdsYe03Mrj0E",
-    (4, 4): "CAACAgIAAxkBAAER95Rqu8twdiY3ygke7kTktECuATS9QwACBiUAAtelKEjS0WFULFDPRj0E",
-    (4, 5): "CAACAgIAAxkBAAER95Vqu8twgC3BZuIU_6GNgn2vKCfyZwACySwAAr1xKEjXp_YUUrIP-D0E",
-    (4, 6): "CAACAgIAAxkBAAER95Zqu8twO26vn_pBWuUerKKQ-i0jtQACty0AAuXeKUiMg4qb-JOhtT0E",
-    (5, 5): "CAACAgIAAxkBAAER95dqu8twxxPl2spBayM2ErNf8kpHKwACqyoAAp__KEhtVSbeNa-kUz0E",
-    (5, 6): "CAACAgIAAxkBAAER95hqu8twEUyizau1abtTpIHUVmLMtgACaicAAvynKEhmSDuYND3Utz0E",
-    (6, 6): "CAACAgIAAxkBAAER95lqu8twBWtMMe5Wuqu-GCqTK4fhCAACRSwAAtL_KUhgtv4jhI40RT0E",
+    (0, 0): "6188005828570654010",
+    (0, 1): "6188447716280901762",
+    (0, 2): "6188186105527935336",
+    (0, 3): "6188506475728479411",
+    (0, 4): "6188225898399933672",
+    (0, 5): "6188488058908713098",
+    (0, 6): "6188171369495145043",
+    (1, 1): "6188425807652724648",
+    (1, 2): "6188226967846789688",
+    (1, 3): "6188423887802343909",
+    (1, 4): "6188089129461359082",
+    (1, 5): "6187988708831011056",
+    (1, 6): "6188144830892229730",
+    (2, 2): "6188283425191895933",
+    (2, 3): "6188043645757694691",
+    (2, 4): "6188461756528992061",
+    (2, 5): "6188187750500409617",
+    (2, 6): "6188259755627126691",
+    (3, 3): "6188196847241142337",
+    (3, 4): "6188274126587701177",
+    (3, 5): "6188013250274141249",
+    (3, 6): "6188072095621062797",
+    (4, 4): "6188105665085449320",
+    (4, 5): "6188243829888393548",
+    (4, 6): "6190672260232127599",
+    (5, 5): "6188383772807799235",
+    (5, 6): "6188171833351610799",
+    (6, 6): "6188251681088612074",
 }
 
 def get_sticker_id(tile):
     key = tuple(sorted(tile))
     return STICKER_MAP.get(key)
+
+def get_tile_emoji(tile):
+    emoji_id = get_sticker_id(tile)
+    if emoji_id:
+        return f'<tg-emoji emoji-id="{emoji_id}">🁔</tg-emoji>'
+    return f"[{tile[0]}|{tile[1]}]"
 
 def generate_domino_deck():
     deck = []
@@ -166,19 +171,16 @@ async def start_game_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     current_id = game.get_current_player_id()
     name = game.player_names[current_id]
 
-    first_sticker = get_sticker_id(first_tile)
+    first_emoji = get_tile_emoji(first_tile)
     
     text = (
         f"First player: {name}\n"
-        f"Initial tile: [{first_tile[0]}|{first_tile[1]}]\n\n"
+        f"Initial tile: {first_emoji}\n\n"
         f"Use /close to stop people from joining the game."
     )
     keyboard = [[InlineKeyboardButton("Make your choice!", switch_inline_query_current_chat="")]]
-    
-    if first_sticker:
-        await update.message.reply_sticker(first_sticker)
         
-    await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+    await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="HTML")
 
 async def leave_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
@@ -245,7 +247,7 @@ async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def stats_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Statistics feature coming soon!")
 
-# --- Inline Query Handler (Stickers UI) ---
+# --- Inline Query Handler (Custom Emoji Menu) ---
 
 async def inline_query_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.inline_query
@@ -271,35 +273,45 @@ async def inline_query_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
     hand = active_game.hands[user_id]
 
-    # ၁။ Deck ထဲမှာ ဆွဲစရာ ကဒ်ကျန်သေးလျှင် Draw ခလုတ်ပြမည်
-    # ၂။ Deck ထဲမှာ ကဒ်ကုန်သွားလျှင် သို့မဟုတ် ကဒ်ဆွဲပြီးပါက Pass ခလုတ် ပြပေးမည်
+    # DRAW သို့မဟုတ် PASS ခလုတ် ပြသခြင်း
     if len(active_game.deck) > 0 and not active_game.drawn_this_turn:
         results.append(
-            InlineQueryResultCachedSticker(
+            InlineQueryResultArticle(
                 id="draw_action",
-                sticker_file_id=DRAW_STICKER_ID,
-                input_message_content=InputTextMessageContent("/draw_action")
+                title="📥 Draw Tile",
+                description="Click to draw a tile",
+                input_message_content=InputTextMessageContent(
+                    f'<tg-emoji emoji-id="{DRAW_STICKER_ID}">❓</tg-emoji> /draw_action',
+                    parse_mode="HTML"
+                )
             )
         )
     else:
         results.append(
-            InlineQueryResultCachedSticker(
+            InlineQueryResultArticle(
                 id="pass_action",
-                sticker_file_id=PASS_STICKER_ID,
-                input_message_content=InputTextMessageContent("/pass_action")
+                title="⏩ Pass Turn",
+                description="Click to pass your turn",
+                input_message_content=InputTextMessageContent(
+                    f'<tg-emoji emoji-id="{PASS_STICKER_ID}">⏭</tg-emoji> /pass_action',
+                    parse_mode="HTML"
+                )
             )
         )
 
     for idx, tile in enumerate(hand):
-        sticker_id = get_sticker_id(tile)
-        if sticker_id:
-            results.append(
-                InlineQueryResultCachedSticker(
-                    id=f"tile_{idx}",
-                    sticker_file_id=sticker_id,
-                    input_message_content=InputTextMessageContent(f"/play_tile {idx}")
+        tile_emoji = get_tile_emoji(tile)
+        results.append(
+            InlineQueryResultArticle(
+                id=f"tile_{idx}",
+                title=f"Tile [{tile[0]}|{tile[1]}]",
+                description="Click to play this tile",
+                input_message_content=InputTextMessageContent(
+                    f"{tile_emoji} /play_tile {idx}",
+                    parse_mode="HTML"
                 )
             )
+        )
 
     await query.answer(results, cache_time=1)
 
@@ -319,7 +331,6 @@ async def handle_play_tile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception:
         return
 
-    # မကိုက်ညီတဲ့ အတုံးကို ချမရအောင် စစ်ဆေးပေးခြင်း
     if not game.can_play_tile(tile):
         await update.message.reply_text("❌ ဒီအတုံးကို ချလို့မရပါဘူး! ဘုတ်ပေါ်က အစွန်းနဲ့ မကိုက်ညီပါဘူး။")
         return
@@ -327,7 +338,6 @@ async def handle_play_tile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     left_end, right_end = game.get_ends()
     a, b = tile
 
-    # အတုံးကို ဘုတ်ပေါ်တွင် မှန်ကန်စွာ ဆက်ပေးခြင်း
     if a == right_end:
         game.board.append((a, b))
     elif b == right_end:
@@ -337,11 +347,7 @@ async def handle_play_tile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif a == left_end:
         game.board.insert(0, (b, a))
 
-    played_sticker = get_sticker_id(tile)
     game.hands[user_id].pop(tile_idx)
-
-    if played_sticker:
-        await update.message.reply_sticker(played_sticker)
 
     if len(game.hands[user_id]) == 0:
         await update.message.reply_text(f"🎉 {game.player_names[user_id]} အနိုင်ရသွားပါပြီ! 🏆")
@@ -386,7 +392,7 @@ async def handle_pass(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_next_turn_message(context, game)
 
 async def send_next_turn_message(context, game):
-    board_str = " ".join([f"[{t[0]}|{t[1]}]" for t in game.board])
+    board_str = " ".join([get_tile_emoji(t) for t in game.board])
     current_id = game.get_current_player_id()
     name = game.player_names[current_id]
 
@@ -398,7 +404,8 @@ async def send_next_turn_message(context, game):
     await context.bot.send_message(
         chat_id=game.chat_id,
         text=text,
-        reply_markup=InlineKeyboardMarkup(keyboard)
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode="HTML"
     )
 
 if __name__ == "__main__":
